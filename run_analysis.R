@@ -20,10 +20,10 @@ library(data.table)
 library(reshape2)
 
 # Identify working directory to download data to
-download <- c("C:\\Users\\Warren\\Desktop\\Coursework\\Coursera\\Getting and Cleaning Your Data\\Project\\Repository")
+download <- c("C:\\Users\\Warren\\Desktop\\Coursework\\Coursera\\Getting and Cleaning Your Data\\Repository")
 
 # Identify directory of UCI HAR Dataset
-datadir <- c("C:\\Users\\Warren\\Desktop\\Coursework\\Coursera\\Getting and Cleaning Your Data\\Project\\Repository\\UCI HAR Dataset")
+datadir <- c("C:\\Users\\Warren\\Desktop\\Coursework\\Coursera\\Getting and Cleaning Your Data\\Repository\\UCI HAR Dataset")
 
 # Set working directory to download data to
 setwd(download)
@@ -44,7 +44,7 @@ setwd(datadir)
 
 # Read in the features.txt data and provide column names
 # These provide specific labels for the values coming from the train/text_X files
-features <- read.table(file = "features.txt", stringsAsFactors = FALSE)
+features <- read.table(file = "features.txt")
                        
 names(features) <- c("Feature_Index","Feature_Variable")
 
@@ -58,8 +58,7 @@ features$Feature_Variable <- gsub("[-()]","",features$Feature_Variable)
 
 # Read in the activity_labels.txt file and provide column names
 # These labels will label the code from the train/test_Y files
-activity_labels <- read.table(file = "activity_labels.txt",
-                              stringsAsFactors = FALSE)
+activity_labels <- read.table(file = "activity_labels.txt")
 names(activity_labels) <- c("Act_Index","Activity_Name")
 
 #########################################################################
@@ -75,7 +74,7 @@ train_files <- list.files(path = "train",
 for (i in 1:length(train_files)) {
   
   # Read in text file data based on vector of directory/file combos
-  temp <- read.table(train_files[i], stringsAsFactors = FALSE)
+  temp <- read.table(train_files[i])
   
   # Assigns temp to table name with directory removed
   file_name <- gsub(".*/","",train_files[i])
@@ -96,7 +95,7 @@ test_files <- list.files(path = "test",
 for (i in 1:length(test_files)) {
   
   # Read in text file data based on vector of directory/file combos
-  temp <- read.table(test_files[i], stringsAsFactors = FALSE)
+  temp <- read.table(test_files[i])
   
   # Assigns temp to table name with directory removed
   file_name <- gsub(".*/","",test_files[i])
@@ -144,23 +143,22 @@ names(y_test) <- "Activity_ID"
 names(subject_train) <- "Subject_ID"
 names(subject_test) <- "Subject_ID"
 
-# Attach activity names to activity IDs
-y_train <- merge(x = y_train,
-      y = activity_labels,
-      by.x = "Activity_ID",
-      by.y = "Act_Index")
-
-y_test <- merge(x = y_test,
-      y = activity_labels,
-      by.x = "Activity_ID",
-      by.y = "Act_Index")
-
 # Combine subject_, y_, and x_ tables for train and test separately
 train_combine <- cbind(subject_train, y_train, X_train)
 test_combine <- cbind(subject_test, y_test, X_test)
 
 # Combine train_combine and test_combine into a single table
 combine <- rbind(train_combine, test_combine)
+
+# Attach legitimate activity names
+combine <- merge(x = combine,
+                 y = activity_labels,
+                 by.x = "Activity_ID",
+                 by.y = "Act_Index",
+                 sort = FALSE)
+
+# Re-sort columns such that activity is in front
+combine <- combine[c(82,1:81)]
 
 # Reshape data while holding subject and activity constant
 combine_avg <- melt(combine, id = c("Subject_ID", "Activity_ID", "Activity_Name"))
